@@ -1,0 +1,1 @@
+# Hope Mind — AI Integration

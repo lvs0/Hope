@@ -1,0 +1,32 @@
+Package: hope-halo
+Version: 0.1.0-alpha
+Section: admin
+Priority: required
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         systemd,
+         systemd-sysv,
+         sudo,
+         dbus,
+         udev,
+         libudev1,
+         librsutil0.3,
+         libsqlite3-0,
+         libssl3,
+         librust-libudev-dev
+Maintainer: Hope OS Team <dev@hope-os.org>
+Description: Hope OS Hardware Adaptation Layer (HAL+)
+ Rust daemon for hardware detection and driver management.
+ .
+ HAL+ features:
+  - Automatic device detection via udev
+  - Vendor:product ID lookup in local SQLite database
+  - Cloud sync for unknown devices (nightly)
+  - Notification system with simple UI (1 question, 3 buttons max)
+  - No jargon in user communications
+  - Kernel module loading and driver installation
+  - Bitwarden / KeePassXC / vaultwarden integration
+  - Privacy-first: local-first processing
+ .
+ This package is part of Hope OS.
+Homepage: https://hope-os.org

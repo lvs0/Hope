@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hope OS — Your digital life, under your control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0F0F12;
+      --bg-elevated: #141418;
+      --bg-card: #1a1a20;
+      --indigo: #4F46E5;
+      --violet: #7C3AED;
+      --cyan: #06B6D4;
+      --text-primary: #F0F0FF;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      --border: rgba(255, 255, 255, 0.06);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Background grid effect */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(79, 70, 229, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 70, 229, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 0;
+      background: rgba(15, 15, 18, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .nav-logo img {
+      width: 32px;
+      height: 32px;
+    }
+
+    .nav-logo span {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      font-size: 18px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 400;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-github {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-github:hover {
+      background: var(--bg-card);
+      border-color: var(--indigo);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(79, 70, 229, 0.15);
+      border: 1px solid rgba(79, 70, 229, 0.3);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--indigo);
+      margin-bottom: 32px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--indigo);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 10vw, 80px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--cyan) 50%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--text-secondary);
+      margin-bottom: 48px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-logo {
+      width: 160px;
+      height: 160px;
+      margin-bottom: 48px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white;
+      box-shadow: 0 4px 24px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: var(--cyan);
+    }
+
+    /* Sections */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header .section-desc {
+      margin: 0 auto;
+    }
+
+    /* Pillars */
+    .pillars {
+      background: linear-gradient(180deg, transparent, rgba(79, 70, 229, 0.03) 50%, transparent);
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .pillar-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pillar-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(79, 70, 229, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .pillar-card:hover::before {
+      opacity: 1;
+    }
+
+    .pillar-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(79, 70, 229, 0.15);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .pillar-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .pillar-card p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Privacy */
+    .privacy-levels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .privacy-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .privacy-card:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .privacy-level {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-family: 'DM Mono', monospace;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .privacy-level.level-1 { background: rgba(34, 197, 94, 0.15); color: #22C55E; }
+    .privacy-level.level-2 { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .privacy-level.level-3 { background: rgba(168, 85, 247, 0.15); color: #A855F7; }
+    .privacy-level.level-4 { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+
+    .privacy-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .privacy-card p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .privacy-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .privacy-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .privacy-features li::before {
+      content: '→';
+      color: var(--cyan);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Tech Stack */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .tech-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .tech-item:hover {
+      border-color: var(--indigo);
+      transform: translateY(-2px);
+    }
+
+    .tech-item .tech-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .tech-item h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .tech-item p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Requirements */
+    .reqs-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      align-items: start;
+    }
+
+    .reqs-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .reqs-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reqs-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .reqs-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .reqs-list li:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .reqs-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .reqs-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--cyan);
+    }
+
+    /* Performance */
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+
+    .perf-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .perf-value {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .perf-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Download */
+    .download {
+      text-align: center;
+      background: linear-gradient(180deg, transparent, rgba(79, 70, 229, 0.05));
+    }
+
+    .download-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 64px 48px;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .download-version {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--cyan);
+      margin-bottom: 16px;
+    }
+
+    .download-card h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .download-card p {
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      color: white;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 4px 24px rgba(79, 70, 229, 0.3);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(79, 70, 229, 0.4);
+    }
+
+    .download-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--cyan);
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-copy a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .footer-copy a:hover {
+      color: var(--indigo);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .hero {
+        padding: 100px 24px 60px;
+      }
+
+      .hero-logo {
+        width: 120px;
+        height: 120px;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .hero-cta .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      section {
+        padding: 60px 0;
+      }
+
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .reqs-container {
+        grid-template-columns: 1fr;
+      }
+
+      .download-card {
+        padding: 40px 24px;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-logo">
+        <img src="logo.svg" alt="Hope OS">
+        <span>Hope OS</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#tech">Tech Stack</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/lvs0/Hope" class="nav-github" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+      <button class="mobile-menu-btn" aria-label="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">v0.1 · Alpha</div>
+    <img src="logo.svg" alt="Hope OS" class="hero-logo">
+    <h1>Hope OS</h1>
+    <p class="hero-tagline mono">"Your digital life, under your control"</p>
+    <div class="hero-cta">
+      <a href="#download" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Download
+      </a>
+      <a href="https://github.com/lvs0/Hope" class="btn btn-secondary" target="_blank">
+        View on GitHub
+      </a>
+    </div>
+  </section>
+
+  <section class="pillars" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Core Features</div>
+        <h2 class="section-title">Six pillars of autonomy</h2>
+        <p class="section-desc">Every component designed with privacy and control at its foundation.</p>
+      </div>
+      <div class="pillars-grid">
+        <div class="pillar-card animate-in delay-1">
+          <div class="pillar-icon">🔧</div>
+          <h3>HAL+</h3>
+          <p>Hardware Adaptation Layer in Rust. Automatic driver detection and setup — one question max per notification, zero jargon.</p>
+        </div>
+        <div class="pillar-card animate-in delay-2">
+          <div class="pillar-icon">✨</div>
+          <h3>Hope Shell</h3>
+          <p>Wayland-based interface with Deep Space aesthetic. Blazing fast Spotlight search powered by Phi-3.5-mini local AI.</p>
+        </div>
+        <div class="pillar-card animate-in delay-3">
+          <div class="pillar-icon">🔐</div>
+          <h3>Hope Vault</h3>
+          <p>Full-disk LUKS2 encryption, Argon2id KDF, ephemeral swap keys, and RAM erasure on shutdown for Maximum mode.</p>
+        </div>
+        <div class="pillar-card animate-in delay-4">
+          <div class="pillar-icon">🧠</div>
+          <h3>Hope-Mind</h3>
+          <p>Local AI inference with intelligent model loading. Granite 3.1 for deep work, automatic model unloading after 15min idle.</p>
+        </div>
+        <div class="pillar-card animate-in delay-5">
+          <div class="pillar-icon">🎤</div>
+          <h3>Hope Voice</h3>
+          <p>Push-to-talk voice control with local Whisper. No wake words, no cloud transmission — pure privacy.</p>
+        </div>
+        <div class="pillar-card animate-in delay-6">
+          <div class="pillar-icon">🔗</div>
+          <h3>Polygone Integrated</h3>
+          <p>End-to-end encrypted sync, distributed LLM inference, 4K screen casting under 50ms, and zero-config dev sharing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Privacy Levels</div>
+        <h2 class="section-title">Choose your threat model</h2>
+        <p class="section-desc">Three tiers of protection, from everyday security to maximum operational security.</p>
+      </div>
+      <div class="privacy-levels">
+        <div class="privacy-card">
+          <div class="privacy-level level-1">S</div>
+          <h3>Standard</h3>
+          <p>For everyday users who want solid security without friction.</p>
+          <ul class="privacy-features">
+            <li>DoH via Cloudflare</li>
+            <li>Hope-Mind local inference</li>
+            <li>Brave Shields active</li>
+            <li>LUKS2 full-disk encryption</li>
+          </ul>
+        </div>
+        <div class="privacy-card">
+          <div class="privacy-level level-2">R</div>
+          <h3>Renforcé</h3>
+          <p>Enhanced protection for sensitive work and communications.</p>
+          <ul class="privacy-features">
+            <li>DNS over Tor</li>
+            <li>Vault unlock-once mode</li>
+            <li>Clipboard auto-clear (2min)</li>
+            <li>FIDO2 / Passkeys native</li>
+          </ul>
+        </div>
+        <div class="privacy-card">
+          <div class="privacy-level level-3">M</div>
+          <h3>Maximum</h3>
+          <p>Full paranoia mode for high-risk environments.</p>
+          <ul class="privacy-features">
+            <li>Tor proxy mandatory</li>
+            <li>LUKS2 enforced always</li>
+            <li>RAM erasure on shutdown</li>
+            <li>No cloud connectivity</li>
+          </ul>
+        </div>
+        <div class="privacy-card">
+          <div class="privacy-level level-4">🚧</div>
+          <h3>Custom</h3>
+          <p>Roll your own threat model with granular controls.</p>
+          <ul class="privacy-features">
+            <li>Mix and match any tier</li>
+            <li>Custom encryption settings</li>
+            <li>Network policy per-app</li>
+            <li>Audit everything</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tech">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Tech Stack</div>
+        <h2 class="section-title">Built on solid foundations</h2>
+        <p class="section-desc">Battle-tested technologies chosen for stability, security, and performance.</p>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-icon">🐧</div>
+          <h4>Debian Stable 12</h4>
+          <p>10 years support</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">⚙️</div>
+          <h4>linux-zen</h4>
+          <p>30% lighter kernel</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🖥️</div>
+          <h4>Wayland</h4>
+          <p>wlroots compositor</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🦀</div>
+          <h4>Rust</h4>
+          <p>HAL+ in Rust</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🔑</div>
+          <h4>ML-KEM-1024</h4>
+          <p>Post-quantum crypto</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🛡️</div>
+          <h4>LUKS2</h4>
+          <p>Full-disk encryption</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">📦</div>
+          <h4>Btrfs</h4>
+          <p>Snapshots & rollback</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">💾</div>
+          <h4>ZRAM zstd</h4>
+          <p>Memory compression</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🤖</div>
+          <h4>Phi-3.5-mini</h4>
+          <p>Local spotlight AI</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🗣️</div>
+          <h4>Whisper-tiny</h4>
+          <p>Local voice (75MB)</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🔄</div>
+          <h4>BLAKE3</h4>
+          <p>Fast hashing</p>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon">🔏</div>
+          <h4>AES-256-GCM</h4>
+          <p>Symmetric encryption</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: linear-gradient(180deg, transparent, rgba(6, 182, 212, 0.03) 50%, transparent);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Performance</div>
+        <h2 class="section-title">Lightning fast by design</h2>
+        <p class="section-desc">Measured targets on real hardware — not marketing numbers.</p>
+      </div>
+      <div class="perf-grid">
+        <div class="perf-item">
+          <div class="perf-value">&lt;2s</div>
+          <div class="perf-label">Boot on NVMe</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-value">&lt;600MB</div>
+          <div class="perf-label">RAM at idle</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-value">&lt;200ms</div>
+          <div class="perf-label">Spotlight response</div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-value">&lt;30s</div>
+          <div class="perf-label">Snapshot rollback</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="requirements">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">Requirements</div>
+        <h2 class="section-title">Minimal footprint</h2>
+        <p class="section-desc">Hope runs on hardware you already own.</p>
+      </div>
+      <div class="reqs-container">
+        <div class="reqs-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Minimum
+          </h3>
+          <ul class="reqs-list">
+            <li>
+              <span class="reqs-label">CPU</span>
+              <span class="reqs-value">x86-64, 2 cores</span>
+            </li>
+            <li>
+              <span class="reqs-label">RAM</span>
+              <span class="reqs-value">4 GB</span>
+            </li>
+            <li>
+              <span class="reqs-label">Storage</span>
+              <span class="reqs-value">25 GB</span>
+            </li>
+            <li>
+              <span class="reqs-label">GPU</span>
+              <span class="reqs-value">Integrated OK</span>
+            </li>
+            <li>
+              <span class="reqs-label">Display</span>
+              <span class="reqs-value">1280×720</span>
+            </li>
+          </ul>
+        </div>
+        <div class="reqs-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Recommended
+          </h3>
+          <ul class="reqs-list">
+            <li>
+              <span class="reqs-label">CPU</span>
+              <span class="reqs-value">x86-64, 4+ cores</span>
+            </li>
+            <li>
+              <span class="reqs-label">RAM</span>
+              <span class="reqs-value">8 GB (16 GB with AI)</span>
+            </li>
+            <li>
+              <span class="reqs-label">Storage</span>
+              <span class="reqs-value">50 GB+ SSD</span>
+            </li>
+            <li>
+              <span class="reqs-label">GPU</span>
+              <span class="reqs-value">Optional for AI</span>
+            </li>
+            <li>
+              <span class="reqs-label">Display</span>
+              <span class="reqs-value">1920×1080</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="download" id="download">
+    <div class="container">
+      <div class="download-card">
+        <div class="download-version mono">v0.1.0-alpha</div>
+        <h2>Get Hope OS</h2>
+        <p>9-minute install, 0 jargon. No account required.</p>
+        <a href="https://github.com/lvs0/Hope/releases" class="download-btn" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download v0.1.0-alpha
+        </a>
+        <p class="download-note mono">Also available on GitHub · ISO + bare metal</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/lvs0/Hope" target="_blank">GitHub</a>
+        <a href="https://github.com/lvs0/Hope/releases" target="_blank">Releases</a>
+        <a href="https://github.com/lvs0/Hope/docs" target="_blank">Documentation</a>
+        <a href="https://github.com/lvs0/Hope/discussions" target="_blank">Discussions</a>
+      </div>
+      <p class="footer-copy">
+        Hope OS · <a href="https://github.com/lvs0/Hope" target="_blank">github.com/lvs0/Hope</a> · Built with 💜 and Rust
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-in').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+
+    // Nav background on scroll
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.style.background = 'rgba(15, 15, 18, 0.95)';
+      } else {
+        nav.style.background = 'rgba(15, 15, 18, 0.8)';
+      }
+    });
+  </script>
+</body>
+</html>

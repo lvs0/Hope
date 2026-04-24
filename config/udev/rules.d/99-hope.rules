@@ -1,0 +1,21 @@
+# Hope OS udev rules
+# Provides hardware detection and HAL+ integration
+
+# USB device notification
+ACTION=="add", SUBSYSTEM=="usb", ENV{ID_VENDOR_ID}!="", ENV{ID_MODEL_ID}!="", TAG+="hope-hal"
+
+# Input devices
+ACTION=="add", SUBSYSTEM=="input", TAG+="hope-hal"
+
+# Sound devices
+ACTION=="add", SUBSYSTEM=="sound", TAG+="hope-hal"
+
+# Bluetooth devices
+ACTION=="add", SUBSYSTEM=="bluetooth", TAG+="hope-hal"
+
+# ThinkPad special handling
+ACTION=="add", ATTR{idVendor}=="06cb", TAG+="hope-hal"
+
+# Realtek card readers
+ACTION=="add", ATTR{idVendor}=="0bda", ATTR{idProduct}=="0129", TAG+="hope-hal"
+ACTION=="add", ATTR{idVendor}=="0bda", ATTR{idProduct}=="0139", TAG+="hope-hal"

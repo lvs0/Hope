@@ -1,0 +1,16 @@
+Source: hope-core
+Section: admin
+Priority: required
+Maintainer: Hope OS Team <contact@hope-os.dev>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: hope-core
+Architecture: amd64
+Depends: ${misc:Depends}, systemd, udev, btrfs-progs, zstd, linux-image-amd64
+Description: Hope OS core system
+ Installs the base Hope operating system with HAL+, immutable filesystem,
+ and systemd integration.
+ Provides the core systemd services, udev rules, and system configuration.
+ .
+ Home: https://github.com/lvs0/Hope

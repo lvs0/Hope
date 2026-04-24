@@ -1,0 +1,28 @@
+[package]
+name = "hope-hal"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lévy <levy.vs@gmail.com>"]
+description = "Hope OS Hardware Adaptation Layer — Automatic driver detection and hardware management"
+
+[[bin]]
+name = "hal-daemon"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+notify = "6"
+dirs = "5"
+reqwest = { version = "0.12", features = ["json"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
