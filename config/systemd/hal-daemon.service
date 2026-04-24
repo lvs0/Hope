@@ -1,0 +1,13 @@
+[Unit]
+Description=Hope OS HAL+ Hardware Adaptation Layer
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/hal-daemon
+Restart=on-failure
+RestartSec=5
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target
