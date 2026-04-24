@@ -1,123 +1,80 @@
-//! Hope OS Hardware Adaptation Layer (HAL+)
-//!
-//! Daemon that handles hardware detection, driver management,
-//! and system notifications for Hope OS.
+//! Hope OS HAL+ — Hardware Adaptation Layer Daemon
 
-#![warn(missing_docs)]
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod db;
 mod detection;
 mod drivers;
-mod notifications;
 
-use log::{error, info};
-use std::process;
-use tokio::signal;
+use db::DriverDatabase;
+use detection::UdevMonitor;
+
+#[derive(Debug, Clone)]
+pub struct Notification {
+    pub title: String,
+    pub body: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .format_timestamp_millis()
+    // Init logging
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    info!("Hope HAL+ v{} starting up", env!("CARGO_PKG_VERSION"));
-    info!("Hardware Adaptation Layer for Hope OS");
+    tracing::info!("Hope HAL+ starting...");
 
-    // Initialize driver database
-    let driver_db = db::DriverDatabase::new()?;
-    info!("Driver database initialized: {} entries", driver_db.len());
+    // Init database
+    let db = DriverDatabase::new()?;
+    tracing::info!("Driver database initialized");
 
-    // Initialize udev monitor
-    let mut monitor = detection::UdevMonitor::new()?;
-    info!("udev monitor initialized");
+    // Notification channel
+    let (tx, mut rx) = mpsc::channel::<Notification>(32);
 
-    // Spawn notification system
-    let notification_tx = notifications::spawn_notification_system();
-    info!("Notification system ready");
+    // Handle notifications async
+    let tx_clone = tx.clone();
+    tokio::spawn(async move {
+        while let Some(notif) = rx.recv().await {
+            tracing::info!("Notification: {} — {}", notif.title, notif.body);
+        }
+    });
 
-    // Main event loop
+    tracing::info!("HAL+ running. Monitoring hardware events...");
+
+    // Main loop: scan USB devices
     loop {
-        tokio::select! {
-            Some(event) = monitor.next_event() => {
-                handle_udev_event(event, &driver_db, &notification_tx).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        match UdevMonitor::scan_usb_devices() {
+            Ok(events) => {
+                for event in events {
+                    tracing::debug!("USB device: {}:{} ({})", event.vendor_id, event.product_id, event.action);
+
+                    // Look up driver
+                    if let Ok(Some(driver)) = db.lookup(&event.vendor_id, &event.product_id) {
+                        tracing::info!("Found driver for {}: {} ({})", event.vendor_id, event.product_id, driver.name);
+
+                        // Install driver
+                        if let Err(e) = drivers::install_driver(&driver) {
+                            tracing::warn!("Failed to install driver {}: {}", driver.name, e);
+                        } else {
+                            tracing::info!("Driver {} installed successfully", driver.name);
+                            
+                            // Send notification
+                            let _ = tx_clone.send(Notification {
+                                title: "Driver installé".into(),
+                                body: format!("{} est maintenant actif", driver.name),
+                            }).await;
+                        }
+                    }
+                }
             }
-            _ = signal::ctrl_c() => {
-                info!("Shutting down HAL+");
-                break;
+            Err(e) => {
+                tracing::warn!("Failed to scan USB devices: {}", e);
             }
-        }
-    }
-
-    Ok(())
-}
-
-/// Handle a udev event and drive the detection flow
-async fn handle_udev_event(
-    event: detection::UdevEvent,
-    driver_db: &db::DriverDatabase,
-    notification_tx: &notifications::NotificationSender,
-) {
-    info!("udev event: action={} subsystem={} vendor:product={}:{}",
-          event.action, event.subsystem, event.vendor_id, event.product_id);
-
-    // Only process device add/change events
-    if event.action != "add" && event.action != "change" {
-        return;
-    }
-
-    // Look up vendor:product in local database
-    match driver_db.find_driver(&event.vendor_id, &event.product_id) {
-        Ok(Some(driver_info)) => {
-            info!("Found driver: {} for {}:{}",
-                  driver_info.name, event.vendor_id, event.product_id);
-
-            // Install the driver
-            if let Err(e) = drivers::install_driver(&driver_info) {
-                error!("Failed to install driver: {}", e);
-                notification_tx
-                    .send_notification(notifications::Notification {
-                        title: "Problème matériel".into(),
-                        body: format!("L'appareil {} n'a pas de pilote disponible.", driver_info.name),
-                        actions: vec![
-                            notifications::Action {
-                                label: "Ignorer".into(),
-                                id: "ignore".into(),
-                            },
-                            notifications::Action {
-                                label: "Plus d'infos".into(),
-                                id: "info".into(),
-                            },
-                        ],
-                    })
-                    .await;
-                return;
-            }
-
-            notification_tx
-                .send_notification(notifications::Notification {
-                    title: format!("{} prêt", driver_info.name),
-                    body: "L'appareil est configuré.".into(),
-                    actions: vec![
-                        notifications::Action {
-                            label: "OK".into(),
-                            id: "ok".into(),
-                        },
-                    ],
-                })
-                .await;
-        }
-        Ok(None) => {
-            // Unknown device - signal Hope-Mind to search
-            info!("Unknown device {}:{}, requesting cloud lookup",
-                  event.vendor_id, event.product_id);
-
-            if let Err(e) = detection::request_cloud_lookup(&event.vendor_id, &event.product_id).await {
-                error!("Cloud lookup failed: {}", e);
-            }
-        }
-        Err(e) => {
-            error!("Database error: {}", e);
         }
     }
 }
