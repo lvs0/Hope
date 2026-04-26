@@ -1,0 +1,26 @@
+#!/bin/bash
+# Hope Spawn — Application Launcher for Hope OS
+# Usage: hope-spawn <app-name>
+
+set -e
+
+APP="$1"
+
+if [ -z "$APP" ]; then
+    echo "Usage: hope-spawn <application>"
+    echo "Available apps are managed through Hope OS package system"
+    exit 1
+fi
+
+echo "[Hope] Launching: $APP"
+
+# Resolve app path
+APP_PATH="/usr/bin/$APP"
+
+if [ ! -x "$APP_PATH" ]; then
+    echo "[Error] Application not found: $APP"
+    echo "Available in /usr/bin/"
+    exit 1
+fi
+
+exec "$APP_PATH"
