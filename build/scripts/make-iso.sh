@@ -159,7 +159,7 @@ create_live_base() {
     mkdir -p "${live_root}/etc"
     mkdir -p "${live_root}/var"
     mkdir -p "${live_root}/var/lib"
-    mkdir -p "${live_root}/home/hope
+    mkdir -p "${live_root}/home/hope"
 
     # Create minimal fstab for live boot
     cat > "${live_root}/etc/fstab" <<'FSTAB'
@@ -319,7 +319,7 @@ create_iso() {
         --grub2-boot-info \
         -boot-load-size 4 \
         -iso-level 3 \
-        -划分 "${ISO_BOOT_SIZE}" \
+        -boot-load-size "${ISO_BOOT_SIZE}" \
         -eltorito-alt-boot \
         -e boot/hybrid \
         -no-emul-boot \

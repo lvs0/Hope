@@ -1,0 +1,22 @@
+[package]
+name = "hope-vault"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lévy <levy.vs@gmail.com>"]
+description = "Hope OS Vault — Password manager and secrets storage"
+license = "MIT"
+
+[[bin]]
+name = "hope-vault"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ring = "0.17"
+rpassword = "7"
+dirs = "5"
