@@ -131,6 +131,7 @@ prepare_base() {
         "boot/grub"
         "boot/grub/fonts"
         "boot/hope"
+        "boot/syslinux"
         "live"
         "live/boot-dev"
         "live/boot-hybrid"
@@ -317,9 +318,8 @@ create_iso() {
         -m "*.hope" \
         -boot-info-table \
         --grub2-boot-info \
-        -boot-load-size 4 \
-        -iso-level 3 \
         -boot-load-size "${ISO_BOOT_SIZE}" \
+        -iso-level 3 \
         -eltorito-alt-boot \
         -e boot/hybrid \
         -no-emul-boot \

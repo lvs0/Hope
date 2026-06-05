@@ -5,6 +5,7 @@
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 use tracing::info;
 
 /// Search result item
@@ -39,9 +40,19 @@ impl std::fmt::Display for SearchCategory {
     }
 }
 
+/// A searchable system setting
+#[derive(Debug, Clone)]
+struct SettingEntry {
+    name: String,
+    description: String,
+    category: String,
+    command: String,
+}
+
 /// Search index
 pub struct SearchIndex {
     applications: Vec<ApplicationEntry>,
+    settings: Vec<SettingEntry>,
 }
 
 #[derive(Debug, Clone)]
@@ -55,14 +66,17 @@ impl SearchIndex {
     /// Build search index from system
     pub fn build() -> Result<Self> {
         let applications = Self::index_applications()?;
-        Ok(Self { applications })
+        let settings = Self::index_settings()?;
+        Ok(Self {
+            applications,
+            settings,
+        })
     }
 
     /// Index installed applications
     fn index_applications() -> Result<Vec<ApplicationEntry>> {
         let mut apps = Vec::new();
 
-        // Check common application directories
         let desktop_dirs = [
             "/usr/share/applications",
             "/usr/local/share/applications",
@@ -85,6 +99,115 @@ impl SearchIndex {
         }
 
         Ok(apps)
+    }
+
+    /// Index system settings (GNOME, KDE, common configs)
+    fn index_settings() -> Result<Vec<SettingEntry>> {
+        let mut settings = Vec::new();
+
+        // Network settings
+        settings.push(SettingEntry {
+            name: "WiFi".to_string(),
+            description: "Configure wireless networks".to_string(),
+            category: "Network".to_string(),
+            command: "nmcli device wifi list".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Bluetooth".to_string(),
+            description: "Manage Bluetooth devices".to_string(),
+            category: "Network".to_string(),
+            command: "bluetoothctl show".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "VPN".to_string(),
+            description: "VPN connections".to_string(),
+            category: "Network".to_string(),
+            command: "nmcli connection show".to_string(),
+        });
+
+        // Display settings
+        settings.push(SettingEntry {
+            name: "Display".to_string(),
+            description: "Screen resolution and brightness".to_string(),
+            category: "Display".to_string(),
+            command: "wlr-randr".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Wallpaper".to_string(),
+            description: "Change desktop wallpaper".to_string(),
+            category: "Display".to_string(),
+            command: "swaymsg output * bg ~/Pictures/wallpaper.png fill".to_string(),
+        });
+
+        // Sound settings
+        settings.push(SettingEntry {
+            name: "Audio".to_string(),
+            description: "Sound settings and volume".to_string(),
+            category: "Sound".to_string(),
+            command: "pavucontrol".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Microphone".to_string(),
+            description: "Input device settings".to_string(),
+            category: "Sound".to_string(),
+            command: "pactl list sources".to_string(),
+        });
+
+        // System settings
+        settings.push(SettingEntry {
+            name: "Power".to_string(),
+            description: "Power management and battery".to_string(),
+            category: "System".to_string(),
+            command: "powerprofilesctl get".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Keyboard".to_string(),
+            description: "Keyboard layout and shortcuts".to_string(),
+            category: "System".to_string(),
+            command: "localectl status".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Theme".to_string(),
+            description: "Change system theme".to_string(),
+            category: "Appearance".to_string(),
+            command: "gsettings get org.gnome.desktop.interface gtk-theme".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Font".to_string(),
+            description: "System font settings".to_string(),
+            category: "Appearance".to_string(),
+            command: "gsettings get org.gnome.desktop.interface font-name".to_string(),
+        });
+
+        // User settings
+        settings.push(SettingEntry {
+            name: "Users".to_string(),
+            description: "Manage user accounts".to_string(),
+            category: "System".to_string(),
+            command: "cat /etc/passwd".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Firewall".to_string(),
+            description: "Network security rules".to_string(),
+            category: "Security".to_string(),
+            command: "ufw status".to_string(),
+        });
+
+        // Hope OS specific
+        settings.push(SettingEntry {
+            name: "HAL".to_string(),
+            description: "Hardware Adaptation Layer status".to_string(),
+            category: "Hope OS".to_string(),
+            command: "systemctl status hope-hal".to_string(),
+        });
+        settings.push(SettingEntry {
+            name: "Shell".to_string(),
+            description: "Hope Shell compositor settings".to_string(),
+            category: "Hope OS".to_string(),
+            command: "hope-shell config".to_string(),
+        });
+
+        Ok(settings)
     }
 
     /// Parse a .desktop file
@@ -134,6 +257,28 @@ impl SearchIndex {
             }
         }
 
+        // Search settings
+        for setting in &self.settings {
+            let name_score = self.fuzzy_score(&setting.name, &query_lower);
+            let cat_score = self.fuzzy_score(&setting.category, &query_lower);
+            let score = name_score.max(cat_score);
+            if score > 0.3 {
+                results.push(SearchResult {
+                    title: setting.name.clone(),
+                    subtitle: format!("[{}] {}", setting.category, setting.description),
+                    category: SearchCategory::Setting,
+                    action: setting.command.clone(),
+                    score,
+                });
+            }
+        }
+
+        // Search files in home directory (shallow)
+        if let Ok(home) = std::env::var("HOME") {
+            let home_path = PathBuf::from(&home);
+            self.search_files(&home_path, &query_lower, &mut results, 0, 3);
+        }
+
         // Check for calculations
         if self.is_calculation(query) {
             if let Some(result) = self.evaluate_calculation(query) {
@@ -147,26 +292,85 @@ impl SearchIndex {
             }
         }
 
+        // Check for shell commands
+        if self.is_command(query) {
+            results.push(SearchResult {
+                title: query.to_string(),
+                subtitle: "Run as shell command".to_string(),
+                category: SearchCategory::Command,
+                action: query.to_string(),
+                score: 0.5,
+            });
+        }
+
         // Sort by score
         results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
         results
+    }
+
+    /// Recursively search files up to max depth
+    fn search_files(
+        &self,
+        dir: &Path,
+        query: &str,
+        results: &mut Vec<SearchResult>,
+        current_depth: usize,
+        max_depth: usize,
+    ) {
+        if current_depth >= max_depth {
+            return;
+        }
+
+        let entries = match std::fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+
+            // Skip hidden files and system dirs
+            if name.starts_with('.') || name == "node_modules" || name == "__pycache__" {
+                continue;
+            }
+
+            if let Some(stem) = path.file_stem() {
+                let stem_str = stem.to_string_lossy().to_lowercase();
+                let score = self.fuzzy_score(&stem_str, query);
+                if score > 0.4 {
+                    let is_dir = path.is_dir();
+                    results.push(SearchResult {
+                        title: entry.file_name().to_string_lossy().to_string(),
+                        subtitle: path.to_string_lossy().to_string(),
+                        category: SearchCategory::File,
+                        action: if is_dir {
+                            format!("cd {}", path.display())
+                        } else {
+                            path.to_string_lossy().to_string()
+                        },
+                        score: score * 0.8, // Files score slightly lower than apps
+                    });
+                }
+            }
+
+            // Recurse into directories
+            if path.is_dir() {
+                self.search_files(&path, query, results, current_depth + 1, max_depth);
+            }
+        }
     }
 
     /// Simple fuzzy matching score
     fn fuzzy_score(&self, candidate: &str, query: &str) -> f32 {
         let candidate_lower = candidate.to_lowercase();
 
-        // Exact match
         if candidate_lower == query {
             return 1.0;
         }
-
-        // Starts with
         if candidate_lower.starts_with(query) {
             return 0.9;
         }
-
-        // Contains
         if candidate_lower.contains(query) {
             return 0.7;
         }
@@ -189,9 +393,20 @@ impl SearchIndex {
             && input.chars().any(|c| "+-*/".contains(c))
     }
 
+    /// Check if input looks like a shell command
+    fn is_command(&self, input: &str) -> bool {
+        let cmd = input.split_whitespace().next().unwrap_or("");
+        // Check common command prefixes
+        matches!(
+            cmd,
+            "ls" | "cat" | "echo" | "grep" | "find" | "cd" | "mkdir" | "rm"
+            | "cp" | "mv" | "sudo" | "apt" | "dnf" | "pacman" | "systemctl"
+            | "git" | "docker" | "curl" | "wget" | "ssh" | "ping"
+        )
+    }
+
     /// Evaluate a simple calculation
     fn evaluate_calculation(&self, expr: &str) -> Option<String> {
-        // Simple eval for basic operations
         let parts: Vec<&str> = expr.split_whitespace().collect();
         if parts.len() == 3 {
             if let (Ok(a), Ok(b)) = (
@@ -201,8 +416,8 @@ impl SearchIndex {
                 let result = match parts[1] {
                     "+" => a + b,
                     "-" => a - b,
-                    "*" | "x" | "×" => a * b,
-                    "/" | "÷" => a / b,
+                    "*" | "x" | "\u{00d7}" => a * b,
+                    "/" | "\u{00f7}" => a / b,
                     _ => return None,
                 };
                 return Some(format!("{}", result));
@@ -257,8 +472,17 @@ Usage: hope-spotlight <query>
 
 Examples:
     hope-spotlight firefox       Search for Firefox
-    hope-spotlight 45 * 12       Calculate 45 * 12
     hope-spotlight wifi          Search for WiFi settings
+    hope-spotlight wallpaper     Search for wallpaper settings
+    hope-spotlight 45 * 12       Calculate 45 * 12
+    hope-spotlight ls            Run ls command
+
+Search categories:
+    Applications    Installed .desktop apps
+    Settings        System and Hope OS settings
+    Files           Home directory files (shallow)
+    Commands        Common shell commands
+    Calculations    Mathematical expressions
 
 Keyboard shortcuts (when running as overlay):
     Super+Espace     Open Spotlight
@@ -281,6 +505,7 @@ mod tests {
                 executable: "firefox".to_string(),
                 description: "Web browser".to_string(),
             }],
+            settings: vec![],
         };
 
         let results = index.search("firefox");
@@ -292,9 +517,37 @@ mod tests {
     fn calculation() {
         let index = SearchIndex {
             applications: vec![],
+            settings: vec![],
         };
-
         assert!(index.is_calculation("45 * 12"));
         assert!(!index.is_calculation("hello"));
+    }
+
+    #[test]
+    fn setting_search() {
+        let index = SearchIndex {
+            applications: vec![],
+            settings: vec![SettingEntry {
+                name: "WiFi".to_string(),
+                description: "Configure wireless networks".to_string(),
+                category: "Network".to_string(),
+                command: "nmcli device wifi list".to_string(),
+            }],
+        };
+        let results = index.search("wifi");
+        assert!(!results.is_empty());
+        assert_eq!(results[0].title, "WiFi");
+        assert!(matches!(results[0].category, SearchCategory::Setting));
+    }
+
+    #[test]
+    fn command_detection() {
+        let index = SearchIndex {
+            applications: vec![],
+            settings: vec![],
+        };
+        assert!(index.is_command("ls -la"));
+        assert!(index.is_command("git status"));
+        assert!(!index.is_command("firefox"));
     }
 }

@@ -18,7 +18,7 @@ pub struct HopeShellConfig {
 }
 
 /// Compositor backend selection
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CompositorConfig {
     /// Backend to use: "river", "cage", "sway", or "auto"
     pub backend: String,

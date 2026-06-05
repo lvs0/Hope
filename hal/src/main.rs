@@ -1,21 +1,15 @@
 //! Hope OS HAL+ — Hardware Adaptation Layer Daemon
 
-use std::sync::Arc;
-use tokio::sync::mpsc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod db;
 mod detection;
 mod drivers;
+mod notifications;
 
 use db::DriverDatabase;
 use detection::UdevMonitor;
-
-#[derive(Debug, Clone)]
-pub struct Notification {
-    pub title: String,
-    pub body: String,
-}
+use notifications::{spawn_notification_system, Notification};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,16 +25,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = DriverDatabase::new()?;
     tracing::info!("Driver database initialized");
 
-    // Notification channel
-    let (tx, mut rx) = mpsc::channel::<Notification>(32);
-
-    // Handle notifications async
-    let tx_clone = tx.clone();
-    tokio::spawn(async move {
-        while let Some(notif) = rx.recv().await {
-            tracing::info!("Notification: {} — {}", notif.title, notif.body);
-        }
-    });
+    // Spawn validated notification system
+    let notifier = spawn_notification_system();
 
     tracing::info!("HAL+ running. Monitoring hardware events...");
 
@@ -51,23 +37,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match UdevMonitor::scan_usb_devices() {
             Ok(events) => {
                 for event in events {
-                    tracing::debug!("USB device: {}:{} ({})", event.vendor_id, event.product_id, event.action);
+                    tracing::debug!(
+                        "USB device: {}:{} ({})",
+                        event.vendor_id,
+                        event.product_id,
+                        event.action
+                    );
 
                     // Look up driver
                     if let Ok(Some(driver)) = db.lookup(&event.vendor_id, &event.product_id) {
-                        tracing::info!("Found driver for {}: {} ({})", event.vendor_id, event.product_id, driver.name);
+                        tracing::info!(
+                            "Found driver for {}: {} ({})",
+                            event.vendor_id,
+                            event.product_id,
+                            driver.name
+                        );
 
                         // Install driver
                         if let Err(e) = drivers::install_driver(&driver) {
                             tracing::warn!("Failed to install driver {}: {}", driver.name, e);
                         } else {
                             tracing::info!("Driver {} installed successfully", driver.name);
-                            
-                            // Send notification
-                            let _ = tx_clone.send(Notification {
-                                title: "Driver installé".into(),
-                                body: format!("{} est maintenant actif", driver.name),
-                            }).await;
+
+                            // Send validated notification (no jargon, max 3 buttons)
+                            let _ = notifier
+                                .send(Notification::simple(
+                                    "Driver installed",
+                                    &format!("{} is now active", driver.name),
+                                ))
+                                .await;
                         }
                     }
                 }

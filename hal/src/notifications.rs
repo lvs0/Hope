@@ -2,10 +2,10 @@
 //!
 //! Simple notification system: 1 question max, 3 buttons max, no jargon.
 
-use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use tracing::{debug, error, info};
 
 /// A notification action (button)
 #[derive(Debug, Clone, Serialize, Deserialize)]

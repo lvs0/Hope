@@ -12,7 +12,7 @@ echo "[Hope] Building ISO..."
 
 # Check for required tools
 for cmd in debootstrap xorriso mksquashfs; do
-    if ! command -v $cmd &> /dev/null; then
+    if ! command -v "$cmd" &> /dev/null; then
         echo "[ERROR] Missing required tool: $cmd"
         echo "Run ./scripts/setup-deps.sh first"
         exit 1
